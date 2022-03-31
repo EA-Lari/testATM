@@ -17,7 +17,9 @@ namespace ATM
                 throw new Exception($"Введите сумму, которую можно разделить без остатка на {min}");
             if(sum<0)
                 throw new Exception($"Сумма отрицательная");
-            var bancnotes = GetBanknotes(sum, _banknotes.OrderByDescending(x => x.Banknote.Denomination).ToList());
+            var bancnotes = GetBanknotes(sum, _banknotes
+                .Where(x => x.Banknote.Denomination <= sum)
+                .OrderByDescending(x => x.Banknote.Denomination).ToList());
             return bancnotes;
         }
 
@@ -31,7 +33,7 @@ namespace ATM
 
         private IList<BanknoteCount> GetBanknotes(int sum, IList<BanknoteCount> orderBanknotes)
         {
-            var banknotes = new List<BanknoteCount>();
+            IList<BanknoteCount> banknotes = new List<BanknoteCount>();
             var remainder = sum;
             foreach (var banknote in orderBanknotes)
             {
@@ -49,7 +51,14 @@ namespace ATM
                     break;
             }
             if (remainder > 0)
-                throw new Exception("В банкомате нет необходимоой суммы");
+            {
+                orderBanknotes.Remove(orderBanknotes.First());
+                if (orderBanknotes.Any())
+                    banknotes = GetBanknotes(sum, orderBanknotes);
+                else {
+                    throw new Exception("В банкомате нет необходимоой суммы");
+                }
+            }
             return banknotes;
         }
 
