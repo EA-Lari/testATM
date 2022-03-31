@@ -5,20 +5,48 @@ namespace ATM
     internal class Atm : IAtm
     {
         IList<BanknoteCount> _banknotes;
+        int _maxSum;
+        int _minSum;
 
         public Atm(IAtmRepo repo)
         {
             _banknotes = repo.GetBanknotes();
+            _maxSum = _banknotes.Sum(x => x.Count * x.Banknote.Denomination);
+            _minSum = _banknotes.Min(x => x.Banknote.Denomination);
         }
 
         public IList<BanknoteCount> GetBanknotes(int sum)
         {
-            if(sum<0)
+            if (sum < 0)
                 throw new Exception($"Сумма отрицательная");
+            if(sum > _maxSum)
+                throw new Exception($"В банкомате нет необходимоой суммы");
+            if (sum < _minSum)
+                throw new Exception($"Вводимая сумма слишком мала" +
+                    $"\nВ банкомате есть банкноты номиналом:  {string.Join(',', _banknotes.Select(x => x.Banknote.Denomination))}");
+            if (!CheckOnMin(sum))
+                throw new Exception($"Введите сумму кратную одному из номиналов: {string.Join(',', _banknotes.Select(x => x.Banknote.Denomination))}");
             var bancnotes = GetBanknotes(sum, _banknotes
                 .Where(x => x.Banknote.Denomination <= sum)
                 .OrderByDescending(x => x.Banknote.Denomination).ToList());
             return bancnotes;
+        }
+
+        private bool CheckOnMin(int sum)
+        {
+            var result = false;
+            var banknotes = _banknotes
+                .Select(x => x.Banknote.Denomination)
+                .OrderBy(x => x).ToArray();
+            foreach (var banknote in banknotes)
+            {
+                if ((sum % banknote) == 0)
+                {
+                    result = true;
+                    break;
+                }
+            }
+            return result;
         }
 
         private IList<BanknoteCount> GetBanknotes(int sum, IList<BanknoteCount> orderBanknotes)
