@@ -2,7 +2,7 @@
 using ATM;
 using ATM.Models;
 
-IAtmRepo repo = new AtmRepoTextFile("../../../atm.txt");
+IAtmRepo repo = new AtmRepoTextFile("../../../Data/atm.txt");
 IAtm atm = new Atm(repo);
 var exit = false;
 while (!exit)
